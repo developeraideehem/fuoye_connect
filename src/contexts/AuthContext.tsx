@@ -68,11 +68,17 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
       });
-      const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || 'Login failed');
+        let errorData;
+        try {
+          errorData = await response.json();
+        } catch (e) {
+          throw new Error(`Network error: ${response.status} ${response.statusText}`);
+        }
+        throw new Error(errorData.message || 'Login failed');
       }
+      const data = await response.json();
       
       const loggedInUser: BackendUser = data; // Assuming backend returns user object and token separately or token within user
       setUser(loggedInUser);
@@ -103,11 +109,17 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...userData, password }), // Send password here
       });
-      const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || 'Registration failed');
+        let errorData;
+        try {
+          errorData = await response.json();
+        } catch (e) {
+          throw new Error(`Network error: ${response.status} ${response.statusText}`);
+        }
+        throw new Error(errorData.message || 'Registration failed');
       }
+      const data = await response.json();
       
       const registeredUser: BackendUser = data;
       setUser(registeredUser);

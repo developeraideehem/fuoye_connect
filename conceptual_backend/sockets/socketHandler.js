@@ -1,7 +1,8 @@
 
 import Message from '../models/Message.js';
 import ChatRoom from '../models/ChatRoom.js';
-import User from '../models/User.js'; // To fetch user details if needed
+import User from '../models/User.js';
+import ChatHistory from '../models/ChatHistory.js';
 
 const initializeSocketHandlers = (io) => {
   io.on('connection', (socket) => {
@@ -89,7 +90,40 @@ const initializeSocketHandlers = (io) => {
           timestamp: new Date(),
         });
 
-        await newMessage.save();
+        if (roomIdString.startsWith('dept_')) {
+          // Departmental chat - save to Message collection only
+          console.log('Saving departmental message to Message collection:', {
+            room: roomIdString,
+            text: text.substring(0, 50) + (text.length > 50 ? '...' : ''),
+            sender: sender._id
+          });
+          
+          const savedMessage = await newMessage.save();
+          console.log('Departmental message saved successfully with ID:', savedMessage._id);
+        } else {
+          // AI chat - save to ChatHistory only
+          console.log('Saving AI chat to ChatHistory:', {
+            room: roomIdString,
+            text: text.substring(0, 50) + (text.length > 50 ? '...' : ''),
+            sender: sender._id
+          });
+          
+          await ChatHistory.findOneAndUpdate(
+            { user: sender._id, room: roomIdString },
+            {
+              $push: {
+                messages: {
+                  sender: sender.fullName,
+                  content: text,
+                  timestamp: new Date()
+                }
+              },
+              $set: { lastAccessed: new Date() }
+            },
+            { upsert: true, new: true }
+          );
+          console.log('AI chat saved successfully to ChatHistory');
+        }
         
         // Populate sender details for the client
         const populatedMessage = {
@@ -112,6 +146,31 @@ const initializeSocketHandlers = (io) => {
         // Broadcast the message to everyone in the room (including the sender)
         io.to(roomIdString).emit('newChatMessage', populatedMessage);
         console.log(`Message from ${sender.fullName} to room ${roomIdString}: ${text}`);
+
+        // Save to chat history
+        try {
+          const response = await fetch(`http://localhost:3001/api/chat-history`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${socket.handshake.auth.token}`
+            },
+            body: JSON.stringify({
+              room: roomIdString,
+              messages: [{
+                sender: sender.fullName,
+                content: text,
+                timestamp: new Date()
+              }]
+            })
+          });
+
+          if (!response.ok) {
+            console.error('Failed to save chat history:', await response.text());
+          }
+        } catch (err) {
+          console.error('Error saving chat history:', err);
+        }
 
       } catch (error) {
         console.error(`Error processing chat message in room ${roomIdString}:`, error);
