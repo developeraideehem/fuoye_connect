@@ -1,0 +1,45 @@
+
+{
+  "name": "fuoye-connect-app",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "concurrently \"npm:dev:frontend\" \"npm:dev:backend\"",
+    "dev:frontend": "vite",
+    "dev:backend": "nodemon conceptual_backend/server.js",
+    "build:frontend": "tsc && vite build",
+    "preview:frontend": "vite preview",
+    "postinstall": "node -e \"if (process.env.NODE_ENV !== 'production' && !require('fs').existsSync('.env')) { require('fs').copyFileSync('.env.example', '.env'); console.log('Created .env file from .env.example. Please fill in your actual API keys.'); }\""
+  },
+  "dependencies": {
+    "@google/genai": "^1.2.0",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "react-router-dom": "^6.25.1",
+    "express": "^4.19.2",
+    "socket.io": "^4.7.5",
+    "cors": "^2.8.5",
+    "mongoose": "^8.5.1",
+    "bcryptjs": "^2.4.3",
+    "jsonwebtoken": "^9.0.2",
+    "dotenv": "^16.4.5",
+    "socket.io-client": "^4.7.5"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "@types/express": "^4.17.21",
+    "@types/cors": "^2.8.17",
+    "@types/bcryptjs": "^2.4.6",
+    "@types/jsonwebtoken": "^9.0.6",
+    "vite": "^5.3.5",
+    "@vitejs/plugin-react": "^4.3.1",
+    "tailwindcss": "^3.4.7",
+    "autoprefixer": "^10.4.19",
+    "postcss": "^8.4.39",
+    "typescript": "^5.5.4",
+    "nodemon": "^3.1.4",
+    "concurrently": "^8.2.2"
+  }
+}
